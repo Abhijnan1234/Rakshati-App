@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: rakshati-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build:
+      context: ./backend
+    container_name: rakshati-backend
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    environment:
+      PORT: ${PORT:-5000}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/rakshati}
+      JWT_SECRET: ${JWT_SECRET:-replace_with_a_long_random_secret}
+      NODE_ENV: ${NODE_ENV:-development}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    ports:
+      - "5000:5000"
+
+volumes:
+  mongo_data:
