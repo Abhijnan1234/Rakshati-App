@@ -1,56 +1,107 @@
 # Deploy Rakshati Backend To Render
 
-This guide deploys only the Node.js backend from the `backend/` directory.
+This guide covers deploying the Node.js backend from `backend/` and configuring the required environment variables safely.
 
-## 1. Create A Render Account
+## 1. Create A Render Web Service
 
-1. Go to [Render](https://render.com).
-2. Sign in or create an account.
-3. Connect your GitHub account.
+1. Sign in to [Render](https://render.com).
+2. Connect your GitHub account.
+3. Click `New +`.
+4. Select `Web Service`.
+5. Choose the `Rakshati` repository.
 
-## 2. Connect The Repository
+## 2. Render Service Settings
 
-1. Push this repository to GitHub.
-2. In Render, choose `New +`.
-3. Select `Web Service`.
-4. Choose the `Rakshati` repository.
-
-## 3. Render Service Settings
-
-Use these exact values:
+Use these values:
 
 - Name: `rakshati-backend`
 - Environment: `Node`
-- Region: choose the closest region to your testers
-- Branch: your deployment branch, usually `main`
 - Root Directory: `backend`
 - Build Command: `npm install && npm run build`
 - Start Command: `npm start`
 - Health Check Path: `/health`
 
-## 4. Environment Variables
+## 3. Environment Variables In Render
 
-Add these variables in Render:
+In the Render dashboard:
 
-- `MONGODB_URI=your_mongodb_atlas_connection_string`
-- `JWT_SECRET=replace_with_a_long_random_secret`
+1. Open your `rakshati-backend` service.
+2. Go to the `Environment` tab.
+3. Add these variables one by one:
+
+- `MONGODB_URI`
+- `JWT_SECRET`
+- `NODE_ENV`
+- `GOOGLE_CLIENT_ID`
+
+Recommended values:
+
 - `NODE_ENV=production`
-- `GOOGLE_CLIENT_ID=your_google_web_client_id.apps.googleusercontent.com`
+- `MONGODB_URI=<your MongoDB Atlas connection string>`
+- `JWT_SECRET=<your generated production secret>`
+- `GOOGLE_CLIENT_ID=<your Google web client id>`
 
 Notes:
 
-- Do not hardcode secrets in the repository.
-- Render provides `PORT` automatically. The backend already supports `process.env.PORT` with fallback `5000` for local development.
+- Never paste real secrets into tracked files.
+- Render will provide `PORT` automatically.
+- The backend already reads configuration from environment variables in `backend/src/config/env.ts`.
 
-## 5. Deploy
+## 4. MongoDB Atlas
+
+To obtain the MongoDB connection string:
+
+1. Open MongoDB Atlas.
+2. Select your cluster.
+3. Click `Connect`.
+4. Select `Drivers`.
+5. Choose `Node.js`.
+6. Copy the connection string.
+7. Replace:
+
+- `<username>`
+- `<password>`
+- `<database>`
+
+Example placeholder format:
+
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority
+```
+
+## 5. JWT Secret
+
+Generate a strong production secret. Any 32-byte or longer random value is a good baseline.
+
+Examples:
+
+```bash
+openssl rand -hex 32
+```
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+```powershell
+[Convert]::ToHexString((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
+```
+
+Use the generated value as:
+
+```env
+JWT_SECRET=<generate-a-random-secret-here>
+```
+
+## 6. Deploy
 
 1. Click `Create Web Service`.
-2. Wait for the build and startup to complete.
-3. Open the deployed URL after Render finishes.
+2. Wait for the build and startup to finish.
+3. Open the deployed URL.
 
-## 6. Verify Health Endpoint
+## 7. Verify Deployment
 
-Open:
+Check:
 
 ```text
 https://YOUR_RENDER_URL.onrender.com/health
@@ -66,17 +117,3 @@ Expected response:
 ```
 
 The response may also include a timestamp.
-
-## 7. Connect Flutter To Render
-
-Run the mobile app with:
-
-```bash
-flutter run --dart-define=NETWORK_BASE_URL=https://YOUR_RENDER_URL.onrender.com
-```
-
-If Google Sign-In is used:
-
-```bash
-flutter run --dart-define=NETWORK_BASE_URL=https://YOUR_RENDER_URL.onrender.com --dart-define=GOOGLE_SERVER_CLIENT_ID=your_google_web_client_id.apps.googleusercontent.com
-```

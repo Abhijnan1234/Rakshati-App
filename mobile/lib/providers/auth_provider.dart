@@ -133,7 +133,9 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       final payload = await _googleAuthService.signIn();
-      print('[Rakshati][AuthProvider] Google sign-in payload received=${payload != null}');
+      print(
+        '[Rakshati][AuthProvider] Google sign-in payload received=${payload != null} idToken=${payload?.idToken == null ? 'missing' : 'present'}',
+      );
       return payload;
     } catch (error) {
       print('[Rakshati][AuthProvider] Google sign-in failed: $error');
@@ -147,7 +149,9 @@ class AuthProvider extends ChangeNotifier {
     required GoogleAuthPayload payload,
     String? username,
   }) async {
-    print('[Rakshati][AuthProvider] Google backend login started email=${payload.email}');
+    print(
+      '[Rakshati][AuthProvider] Google backend login started email=${payload.email} idToken=${payload.idToken == null ? 'missing' : 'present'}',
+    );
     _setLoading(true);
     try {
       final session = await _authService.googleLogin(

@@ -22,8 +22,29 @@ class GoogleAuthService {
 
   String? get currentPhotoUrl => _firebaseAuth.currentUser?.photoURL;
 
+  String _describeClientId(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return 'missing';
+    }
+
+    if (trimmed.length <= 12) {
+      return 'present';
+    }
+
+    return '${trimmed.substring(0, 10)}...${trimmed.substring(trimmed.length - 10)}';
+  }
+
   Future<GoogleAuthPayload?> signIn() async {
-    print('[Rakshati][Google] Starting Google Sign-In flow');
+    final configuredServerClientId = AppConfig.googleServerClientId;
+    print(
+      '[Rakshati][Google] Starting Google Sign-In flow serverClientId=${_describeClientId(configuredServerClientId)}',
+    );
+    if (configuredServerClientId == null) {
+      print(
+        '[Rakshati][Google] GOOGLE_SERVER_CLIENT_ID missing in dart-define. Android must fall back to default_web_client_id from processed google-services.json.',
+      );
+    }
     GoogleSignInAccount? account;
     try {
       account = await _googleSignIn.signIn();
@@ -49,11 +70,21 @@ class GoogleAuthService {
 
     print('[Rakshati][Google] Account selected email=${account.email}');
     final authentication = await account.authentication;
+    print(
+      '[Rakshati][Google] Token snapshot email=${account.email} idToken=${authentication.idToken == null ? 'missing' : 'present'} accessToken=${authentication.accessToken == null ? 'missing' : 'present'}',
+    );
 
     if (authentication.idToken == null && authentication.accessToken == null) {
       throw const ApiException(
         'Google authentication did not return a usable token. Check Firebase SHA-1 and Google provider setup.',
         code: 'GOOGLE_TOKEN_MISSING',
+      );
+    }
+
+    if (authentication.idToken == null) {
+      throw const ApiException(
+        'Google Sign-In succeeded, but no Google ID token was returned. Verify GOOGLE_SERVER_CLIENT_ID and confirm android/app/google-services.json is processed into default_web_client_id.',
+        code: 'GOOGLE_ID_TOKEN_MISSING',
       );
     }
 

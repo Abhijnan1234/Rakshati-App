@@ -39,7 +39,7 @@ const googleSchema = z.object({
   email: z.string().trim().email('Enter a valid email address.').transform((value) => value.toLowerCase()),
   googleId: z.string().trim().min(1, 'googleId is required.'),
   username: usernameSchema.optional(),
-  idToken: z.string().trim().optional(),
+  idToken: z.string().trim().min(1, 'idToken is required.'),
 });
 
 const respondWithSession = (res: Response, statusCode: number, user: UserDocument | null) => {

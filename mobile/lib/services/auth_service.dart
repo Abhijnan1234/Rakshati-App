@@ -60,7 +60,9 @@ class AuthService {
     required GoogleAuthPayload payload,
     String? username,
   }) async {
-    print('[Rakshati][AuthService] Google login email=${payload.email} googleId=${payload.googleId}');
+    print(
+      '[Rakshati][AuthService] Google login email=${payload.email} googleId=${payload.googleId} idToken=${payload.idToken == null ? 'missing' : 'present'}',
+    );
     final response = await _client.post(
       '/auth/google',
       body: {

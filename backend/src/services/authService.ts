@@ -90,20 +90,22 @@ export const verifyGoogleIdentity = async ({
   idToken,
   email,
 }: {
-  idToken?: string;
+  idToken: string;
   email: string;
 }): Promise<void> => {
-  if (!idToken) {
-    console.warn('[Rakshati][Auth] No Google idToken supplied. Skipping backend token verification.');
-    return;
-  }
-
   if (!env.GOOGLE_CLIENT_ID) {
-    console.warn('[Rakshati][Auth] GOOGLE_CLIENT_ID is not configured. Skipping Google token verification.');
-    return;
+    throw new AppError(
+      'Google Sign-In is not configured on the server.',
+      500,
+      'GOOGLE_CONFIG_MISSING',
+    );
   }
 
-  console.log('[Rakshati][Auth] Google token verification start');
+  console.log(
+    '[Rakshati][Auth] Google token verification start email=%s audience=%s',
+    email,
+    env.GOOGLE_CLIENT_ID,
+  );
   const ticket = await googleClient.verifyIdToken({
     idToken,
     audience: env.GOOGLE_CLIENT_ID,
@@ -118,5 +120,5 @@ export const verifyGoogleIdentity = async ({
     throw new AppError('Google account email mismatch.', 401, 'GOOGLE_EMAIL_MISMATCH');
   }
 
-  console.log('[Rakshati][Auth] Google token verification end email=%s', payload.email);
+  console.log('[Rakshati][Auth] Google token verification end email=%s subject=%s', payload.email, payload.sub);
 };
